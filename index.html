@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+	<script type="text/javascript" src="js/jquery_1.11.2.min.js"></script>
+	<script type="text/javascript" src="js/cookies.js"></script>
+	<script type="text/javascript" src="data/timeline.js"></script>
+	<!--<script type="text/javascript" src="js/homepage.js"></script>-->
+	<link rel="stylesheet" href="css/homepage.css" type="text/css" media="all">
+	
+		
+</head>
+<body>
+	
+	<div id="header">
+		<div id="header_inner">
+			
+			<div class="tbl">
+				
+				<div class="col wsnw">
+					<div id="title">
+						The Imprisoned
+					</div>
+				</div>
+				
+				<div class="col w100p">
+					<!-- empty column -->
+				</div>
+				
+				
+				<div class="col wsnw">
+					<a href="aboutpage.html">About</a>
+				</div>
+				
+				
+				<div class="col wsnw">
+					<a href="otherpage.html">Other Menu</a>
+				</div>
+				
+				
+				<div class="col wsnw sharecol">
+					<a href="#" id="share">Share</a>
+					<div id="sharecnt" class="dspn">
+						<div class="arrow-up"></div>
+						<div id="sharecnt_inner">
+							<a href="#" class="fa fa-fb"></a><a href="#" class="fa fa-tw"></a><a href="#" class="fa fa-gp"></a>
+						</div>
+					</div>
+					
+				</div>
+				
+				
+			</div>
+			
+			
+		</div>
+	</div>
+	
+	<div id="bg"></div>
+	
+
+	<div id="content_w" class="tbl h100p">
+		
+		<div class="row">
+			<div class="col">
+				
+				<div class="tbl">
+					
+					<div class="col cnt_side_col posr"><div id="leftw"><div id="lefth"></div></div></div>
+					
+					<div class="col cnt_empty_col"></div>
+						
+					<div class="col">
+						
+						<div id="content"></div>
+						
+					</div>
+					
+					
+					<div class="col cnt_side_col posr"><div id="rightw"><div id="righth"></div></div></div>
+				
+				</div>
+				
+				
+				
+			</div>
+		</div>
+		
+		<div class="row bottom_row">
+			<div class="col"></div>
+		</div>
+		
+	</div>
+	
+	<div id="timeline" class="uns">
+		<div id="timeline-shaddow"></div>
+		
+		
+		<div id="tcnt">
+			
+			<div id="tcnti">
+				
+				<div id="tl_ruler_year" class="tbl"></div>
+				
+				
+			</div>
+			
+			<div id="timeline-center"><div class="arrow-down"></div></div>
+			
+		</div>
+		
+		
+	</div>
+	
+
+
+<script>
+(function(jQuery){
+	
+jQuery(document).ready(function($){
+	
+	var i, a;
+	
+	var url_hash = location.hash.substring(1);
+	
+	var window_height = $(window).height();
+	var window_width = $(window).width();
+	
+	var isIE8 = (/MSIE 8./i.test(navigator.userAgent)) ? true:false;
+	
+	var timeline = ts_timeline || {};
+	var timeline_length = timeline.length;
+	var dts = [];
+	var timeline_rannge, range_offset, ruler_start, ruler_end, ruler_range, ruler_year, ruler_quarter, ruler_px_w;
+	var tml = $('#timeline');
+	var tcnt = $('#tcnt');
+	var tcnti = $('#tcnti');
+	var bg = $('#bg');
+	var content = $('#content');
+	
+	var active = 0;
+	var previous = -1;
+	
+	for( i = 0; i < timeline_length; i++ ){
+		
+		timeline[i].dts = ( parseInt(timeline[i].year) * 360 ) + ( parseInt(timeline[i].month) * 30) + parseInt( timeline[i].day );
+		timeline[i].y_dts = ( parseInt(timeline[i].year) * 360 );
+		
+		if( i == timeline_length - 1 ){
+			
+			dts.push( timeline[i].y_dts + 360 );
+			
+		}else{
+			
+			dts.push( timeline[i].y_dts );
+			
+		}
+		
+		
+	}
+
+	dts.sort(function(a, b) {
+		return a - b;
+	})
+
+	timeline_rannge = dts[ timeline_length - 1 ] - dts[0];
+	range_offset = timeline_rannge / 100 * 100;
+	range_offset = Math.floor(range_offset / 360 ) * 360;
+	
+	ruler_start = dts[0] - range_offset;
+	ruler_end = dts[ timeline_length - 1 ] + range_offset;
+	ruler_range = ruler_end - ruler_start;
+	ruler_year = parseInt(ruler_range / 360);
+	ruler_px_w = window_width + ( window_width / 2 );
+	
+	var ruler_year_px_w = Math.round(ruler_px_w / ruler_year);
+
+	ruler_year_px_w = (ruler_year_px_w % 2) == 0 ? ruler_year_px_w : ruler_year_px_w + 1;
+	
+	ruler_px_w = ruler_year_px_w * ruler_year;
+
+	var tl_ruler_year = $('#tl_ruler_year');
+	
+	var tcnt_style = $('<style></style>');
+	var tcnt_style_cnt = '';
+	tcnt.prepend(tcnt_style);
+	
+	var level = '1';
+	
+	if( typeof $.cookie('ts_level') != 'undefined' ){
+	    
+	    level = Number($.cookie('ts_level'))+1;
+	}
+
+		
+	
+	//console.log( timeline );
+	//console.log( dts );
+	//console.log( timeline_rannge + ' - ' + range_offset + ' - ' + ruler_range + ' - ' + ruler_start + ' - ' + ruler_end + ' - ' + ruler_year);
+	
+	
+	
+	
+	var ruler_year_cnt = new Array( ruler_year + 1 ).join( '<div class="col"><i></i><b></b></div>' );
+
+	tcnt_style_cnt+='#tcnti{width:'+ruler_px_w+'px}';
+	tcnt_style_cnt+='#tl_ruler_year .col{width:'+ruler_year_px_w+'px}';
+
+	tcnt_style.html( tcnt_style_cnt );
+
+	tl_ruler_year.append(ruler_year_cnt);
+	
+	var tcnti_height = tcnti.height();
+	var ruler_year_height = tl_ruler_year.height();
+	var timeline_px_height = tcnt.height();
+	var event_height_range = timeline_px_height - ruler_year_height;
+	var event_height_half_range = event_height_range / 2;
+	var event_top_height_half_range = event_height_range / 4;
+	var event_on_top = Math.round(Math.random());
+
+
+	
+	for( i = 0; i < timeline_length; i++ ){
+		
+		timeline[i].r_dts = timeline[i].dts - ruler_start;
+		timeline[i].rpx = ruler_px_w / ruler_range * timeline[i].r_dts;
+		timeline[i].el = $('<div class="tl_event"><div class="tl_event_cnt"><div class="tl_event_date">'+timeline[i].date_str+'</div><div class="tl_event_title">'+timeline[i].headline+'</div></div></div>');
+		timeline[i].el.css('left', timeline[i].rpx + 'px');
+		
+		timeline[i].el_cnt = timeline[i].el.find('.tl_event_cnt');
+		
+		tcnti.append( timeline[i].el );
+
+		timeline[i].bg = $('<div class="bgimg"></div>');
+		
+		if( isIE8 ){
+			
+			timeline[i].bg.css( '-ms-filter', 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src=\'img/'+timeline[i].media+'\', sizingMethod=\'scale\')');
+		}else{
+			
+			timeline[i].bg.css( 'background', 'url(img/'+timeline[i].media+') no-repeat center center fixed');
+			
+		}
+		
+		timeline[i].cnt = $('<div class="cnt"><div class="cnti"><div class="cnt_title">'+timeline[i].headline+'</div><div class="cnt_body">' +(timeline[i].text.replace( '[level_number]', level))+ '</div></div></div>');
+		content.append(timeline[i].cnt);
+		
+		
+		
+		bg.append( timeline[i].bg );
+		
+		
+		if( url_hash.length > 0 ){
+			
+			
+			if( url_hash == timeline[i].reference ){
+				
+				active = i;
+				
+				timeline[i].el.addClass('active');
+				timeline[i].bg.addClass('active');
+				timeline[i].cnt.addClass('active');
+			}
+			
+		}else{
+			
+			if( i == active ){
+				timeline[i].el.addClass('active');
+				timeline[i].bg.addClass('active');
+				timeline[i].cnt.addClass('active');
+			}
+				
+		}
+			
+		
+		
+		
+		
+		timeline[i].el_cnt_random_height = Math.random();
+		
+		event_on_top = !!event_on_top ? 0 : 1;
+		
+		timeline[i].el_cnt_evt_on_top = event_on_top
+		
+		
+		timeline[i].el_cnt.css('margin-top', ((timeline[i].el_cnt_evt_on_top * event_height_half_range) + Math.round((timeline[i].el_cnt_random_height * event_top_height_half_range ))) + 'px');
+		
+		
+		
+		timeline[i].el.find('.tl_event_cnt').bind({
+			
+			'click':function(){
+				
+				var _this = $(this);
+				var _parent = _this.parent();
+				var _index = _parent.index() - 1;
+				
+				if( _index == active ) return;
+				
+				previous = active;
+				active = _index;
+				
+				block_timeline_scroll = false;
+				switch_content()
+
+				
+			}
+			
+		})
+	}
+	
+	var bg_imgs = bg.find('.bgimg');
+	var cnts = content.find('.cnt');
+	
+	var tncti_left_pos = (timeline[active].rpx - (window_width / 2));
+	
+	tcnti.css('left', '-' + tncti_left_pos + 'px' )
+	
+	var block_timeline_scroll = false;
+	
+	
+	
+	
+	
+	function switch_content(){
+		
+		
+		tml.find('.tl_event').removeClass('active');
+		tml.find('.tl_event').eq(active).addClass('active');
+		
+		
+		if( ! block_timeline_scroll ){
+		
+			tcnti.stop().animate({
+					left: - (timeline[active].rpx - (window_width / 2))
+				}, 500, function() {
+					
+			});
+			
+		}
+		
+		
+		bg_imgs.eq(previous).css('opacity','1');
+		bg_imgs.eq(previous).stop().animate({
+				opacity: 0
+			}, 500, function() {
+
+				$(this).removeClass('active');
+				
+		});
+		
+		bg_imgs.eq(active).css('opacity','0');
+		bg_imgs.eq(active).addClass('active');
+		bg_imgs.eq(active).stop().animate({
+				opacity: 1
+			}, 500, function() {
+
+				
+		});
+
+		cnts.eq(previous).css('opacity','1');
+		cnts.eq(previous).stop().animate({
+				opacity: 0
+			}, 500, function() {
+
+				$(this).removeClass('active');
+				
+				cnts.eq(active).css('opacity','0');
+				cnts.eq(active).addClass('active');
+				cnts.eq(active).stop().animate({
+						opacity: 1
+					}, 500, function() {
+		
+						
+				});
+						
+		});
+		
+		
+		tncti_left_pos = (timeline[active].rpx - (window_width / 2));
+		
+		
+		
+	}
+	
+
+	
+	var initdrag = false;
+	
+	
+	tml.bind({
+		'mousedown.f7': function(e){
+
+			var this_mX = e.pageX;
+			var init_position = tncti_left_pos;
+			var found_event = false;
+			
+			e.preventDefault();
+			e.stopPropagation();
+			
+			var incrementer;
+			initdrag = false;
+			
+			
+			$(document).bind({
+				'mousemove.f7': function(e){
+
+					
+					if( !initdrag ){
+						if( Math.abs(this_mX - e.pageX) < 10 ){
+							return;
+						}	
+					}
+					
+					if( !initdrag ){
+						
+						initdrag = true;
+						this_mX = e.pageX;
+						init_position = tncti_left_pos;
+					}
+						
+					incrementer = e.pageX  - this_mX;
+					tncti_left_pos = init_position - incrementer;
+					
+					if( tncti_left_pos < 0 ) tncti_left_pos = 0;
+					if( tncti_left_pos > (ruler_px_w - window_width) ) tncti_left_pos = ruler_px_w - window_width;
+					
+					
+					tcnti.css('left', '-' + tncti_left_pos + 'px' );
+					
+					
+					found_event = false;
+					
+					
+					for( i = 0; i < timeline_length; i++ ){
+
+
+						if( !found_event && i != 0 ){
+							
+							
+							
+							if(( i == timeline_length -1 ) && (tncti_left_pos + (window_width / 2))  > timeline[i].rpx ){
+
+								if( i != active ){
+									
+									previous = active;
+									active = i
+									block_timeline_scroll = true;
+									switch_content();
+
+								}
+								found_event = true;
+								
+							}else if( (tncti_left_pos + (window_width / 2))  < timeline[i].rpx ){
+
+
+								if( (i - 1) != active ){
+									
+									previous = active;
+									active = (i - 1)
+									
+									block_timeline_scroll = true;
+									switch_content();
+									
+								}
+								
+								found_event = true;
+							}
+							
+							//  || (( i == timeline_length -1 ) && (tncti_left_pos + (window_width / 2))  > timeline[i].rpx ) 
+
+							
+						}
+
+					
+					}
+					
+					//if( found_event ) 
+
+
+					
+				},
+				'mouseup.f7': function(e){
+					
+					$(document).unbind('mousemove.f7 mouseup.f7');
+					
+					if( !initdrag ) return false;
+					initdrag = false;
+					
+				}
+			});
+				
+		}
+	});
+	
+	
+	
+	
+	function recalculate_stuff(){
+		
+		window_height = $(window).height();
+		window_width = $(window).width();
+		
+		ruler_px_w = window_width + ( window_width / 2 );
+		ruler_year_px_w = Math.round(ruler_px_w / ruler_year);
+		
+		ruler_year_px_w = (ruler_year_px_w % 2) == 0 ? ruler_year_px_w : ruler_year_px_w + 1;
+	
+		ruler_px_w = ruler_year_px_w * ruler_year;
+
+		ruler_px_w = ruler_year_px_w * ruler_year;
+		
+		
+		tcnt_style_cnt ='#tcnti{width:'+ruler_px_w+'px}';
+		tcnt_style_cnt+='#tl_ruler_year .col{width:'+ruler_year_px_w+'px}';
+
+		tcnt_style.html( tcnt_style_cnt );
+		
+		
+		
+		tcnti_height = tcnti.height();
+		ruler_year_height = tl_ruler_year.height();
+		timeline_px_height = tcnt.height();
+		event_height_range = timeline_px_height - ruler_year_height;
+		event_height_half_range = event_height_range / 2;
+		event_top_height_half_range = event_height_range / 4;
+		event_on_top = Math.round(Math.random());
+		
+		for( i = 0; i < timeline_length; i++ ){
+			
+				timeline[i].r_dts = timeline[i].dts - ruler_start;
+				timeline[i].rpx = ruler_px_w / ruler_range * timeline[i].r_dts;
+				timeline[i].el.css('left', timeline[i].rpx + 'px');
+				timeline[i].el_cnt.css('margin-top', ((timeline[i].el_cnt_evt_on_top * event_height_half_range) + Math.round((timeline[i].el_cnt_random_height * event_top_height_half_range ))) + 'px');
+			
+		}
+		
+		tncti_left_pos = (timeline[active].rpx - (window_width / 2));
+		tcnti.css('left', '-' + tncti_left_pos + 'px' )
+
+	}
+	
+	
+	
+	var left_handle = $('#leftw');
+	var right_handle = $('#rightw');
+	
+	
+	left_handle.bind({
+		'click.f7':function(){
+			previous = active;
+			active--;
+			
+			if( active < 0 ) active = timeline_length - 1;
+			
+			block_timeline_scroll = false;
+			switch_content();
+		}	
+		
+	});
+	
+	right_handle.bind({
+		'click.f7':function(){
+			
+			previous = active;
+			active++;
+			
+			if( active > (timeline_length-1) ) active = 0
+			
+			block_timeline_scroll = false;
+			switch_content();
+			
+		}	
+		
+	});
+	
+	
+	
+	$(window).bind({
+		
+		'resize.f7': recalculate_stuff
+		
+	});
+	
+	
+	
+	
+	var sharecnt = $('#sharecnt');
+	
+	
+	
+	$('#share').on('click', function(e){
+		
+		e.preventDefault();
+		e.stopPropagation();
+		
+		var sharecol = $(this).closest('.sharecol');
+		
+		var sharecol_height = sharecol.height();
+		
+		if( sharecnt.hasClass('dspn') ){
+			
+			sharecnt.removeClass('dspn');
+			sharecnt.css('top', sharecol_height + 'px');
+			
+			$(document).not(sharecnt).bind({
+				
+				'click.removeshare': function(e){
+					
+					console.log('click outside');
+					
+					$(document).unbind('click.removeshare');
+					sharecnt.addClass('dspn');
+				
+				}
+				
+			})
+			
+			
+		}else{
+			
+			sharecnt.addClass('dspn');
+			$(document).unbind('click.removeshare');
+			
+		}
+		
+
+	})
+	
+	
+	sharecnt.find('a.fa').bind({
+		
+		'click':function(e){
+			
+			var _this = $(this);
+			var url;
+			
+			if( _this.hasClass('fa-fb') ){
+				
+				url = 'http://www.facebook.com/sharer.php?u=[url]&t=[text]';
+				
+			}else if( _this.hasClass('fa-tw') ){
+				
+				url = 'https://twitter.com/intent/tweet?text=[text]&url=[url]';
+				
+			}else if( _this.hasClass('fa-gp') ){
+				
+				url = 'https://plus.google.com/share?url=[url]&t=[text]';
+				
+			}
+			
+			
+			url = url.replace('[url]', encodeURIComponent(location.href) );
+			url = url.replace('[text]', encodeURIComponent('Play the Imprisoned Game') )
+
+			var width = 600;
+			var height = 400
+			
+			var leftPosition, topPosition;
+		    leftPosition = (window.screen.width / 2) - ((width / 2) + 10);
+		    topPosition = (window.screen.height / 2) - ((height / 2) + 50);
+		    var windowFeatures = "status=no,height=" + height + ",width=" + width + ",resizable=yes,left=" + leftPosition + ",top=" + topPosition + ",screenX=" + leftPosition + ",screenY=" + topPosition + ",toolbar=no,menubar=no,scrollbars=no,location=no,directories=no";
+
+		    window.open( url ,'Share The Imprisoned Game', windowFeatures);
+		    return false;
+					
+			
+			
+		}
+		
+	})
+	
+	
+
+	
+	
+	
+}) // end jQuery wrap
+
+})(jQuery)
+
+</script>
+</body>
+</html>

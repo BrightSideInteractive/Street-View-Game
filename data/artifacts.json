@@ -1,0 +1,67 @@
+// JSON Document
+
+[
+    {
+        "name": "artifact_1",
+        "image": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "location": "46.3929,-112.7363",
+        "description": "Artifact 1 .....",
+        "content": "This thing was used in the narrative",
+        "photo": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "success": "Great Work, now here is a hint to the next one or this is the end of the level"
+    },
+    {
+        "name": "artifact_2",
+        "image": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "location": "46.3929,-112.7364",
+        "description": "Artifact 2 .....",
+        "content": "This thing was used in the narrative",
+        "photo": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "success": "Great Work, now here is a hint to the next one or this is the end of the level"
+    },
+    {
+        "name": "artifact_3",
+        "image": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "location": "46.3929,-112.7365",
+        "description": "Artifact 3 .....",
+        "content": "This thing was used in the narrative",
+        "photo": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "success": "Great Work, now here is a hint to the next one or this is the end of the level"
+    },
+    {
+        "name": "artifact_4",
+        "image": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "location": "46.3929,-112.7366",
+        "description": "Artifact 4 .....",
+        "content": "This thing was used in the narrative",
+        "photo": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "success": "Great Work, now here is a hint to the next one or this is the end of the level"
+    },
+    {
+        "name": "artifact_5",
+        "image": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "location": "46.3929,-112.7367",
+        "description": "Artifact 5 .....",
+        "content": "This thing was used in the narrative",
+        "photo": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "success": "Great Work, now here is a hint to the next one or this is the end of the level"
+    },
+    {
+        "name": "artifact_6",
+        "image": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "location": "46.3929,-112.7368",
+        "description": "Artifact 6 .....",
+        "content": "This thing was used in the narrative",
+        "photo": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "success": "Great Work, now here is a hint to the next one or this is the end of the level"
+    },
+    {
+        "name": "artifact_7",
+        "image": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "location": "46.3929,-112.7369",
+        "description": "Artifact 7 .....",
+        "content": "This thing was used in the narrative",
+        "photo": "http://www.toursparkle.com/games/Imprisoned/img/artifact1.jpg",
+        "success": "Great Work, now here is a hint to the next one or this is the end of the level"
+    }
+]

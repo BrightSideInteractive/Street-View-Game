@@ -1,0 +1,32 @@
+// JSON Document
+
+[
+    {
+        "panoid": "eNZ7zVfjHugAAAQZZuvbZQ",
+        "artifact": "artifact_1"
+    },
+    {
+        "panoid": "eNZ7zVfjHugAAAQZZuvbZQ",
+        "artifact": "artifact_2"
+    },
+    {
+        "panoid": "eNZ7zVfjHugAAAQZZuvbZQ",
+        "artifact": "artifact_3"
+    },
+    {
+        "panoid": "eNZ7zVfjHugAAAQZZuvbZQ",
+        "artifact": "artifact_4"
+    },
+    {
+        "panoid": "eNZ7zVfjHugAAAQZZuvbZQ",
+        "artifact": "artifact_5"
+    },
+    {
+        "panoid": "eNZ7zVfjHugAAAQZZuvbZQ",
+        "artifact": "artifact_6"
+    },
+    {
+        "panoid": "eNZ7zVfjHugAAAQZZuvbZQ",
+        "artifact": "artifact_7"
+    }
+]

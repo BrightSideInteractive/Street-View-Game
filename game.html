@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+	<script type="text/javascript" src="js/jquery_1.11.2.min.js"></script>
+	<script type="text/javascript" src="js/cookies.js"></script>
+	<script type="text/javascript" src="data/levels.js"></script>
+	<script type="text/javascript" src="data/artifacts.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+	<link rel="stylesheet" href="css/game.css" type="text/css" media="all">
+	
+		
+</head>
+<body>
+<div id="gmap"></div> 
+
+
+<div id="inset_wrapper"><div id="inset_inner"><div id="inset"></div><div id="inset_center"></div></div></div> 
+
+
+<div id="marker_popup_overlay" class="dspn">
+	<div class="tbl h100p w100p">
+		<div class="col vam">
+			
+			<div id="marker_popup_wrapper">
+				<div class="tbl h100p w100p">
+					<div class="row h100p">
+						<div class="col vam">
+							<div style="padding:20px;">
+								<div id="marker_popup"></div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col vam">
+							<div style="padding:20px;">
+								<div id="marker_proceed"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+<div id="dashboard">
+	
+	<div class="tbl h100p w100p maintbl">
+		<div class="col vam">
+			<div id="dashboard_heading">
+				Artifacts Collected:
+			</div>
+		</div>
+	</div>
+		
+	
+</div>
+
+<div id="timer"></div>
+
+
+<script>
+(function(jQuery){
+	
+jQuery(document).ready(function($){
+	
+	var i, a;
+
+	var url_hash = location.hash.substring(1);
+	
+	var window_height = $(window).height();
+	var window_width = $(window).width();
+	
+	var level = 0;
+	
+	//$.cookie('ts_level', 0, { path: '/' });
+	
+	
+	if( typeof $.cookie('ts_level') != 'undefined' ){
+	    
+	    level = $.cookie('ts_level');
+	}
+
+	
+	if( url_hash.length > 0 ){
+		level = url_hash;
+		$.cookie('ts_level', level, { path: '/' });
+	}
+	
+
+	//console.log( level );
+	
+	
+	var this_level = ts_levels[ level ];
+	var this_level_time = this_level.time;
+	var timer_el = $('#timer');
+
+
+	var this_artifacts = [];
+	var marker_popup_overlay = $('#marker_popup_overlay');
+	var marker_popup = marker_popup_overlay.find('#marker_popup');
+	var marker_proceed = marker_popup_overlay.find('#marker_proceed');
+	var dashboard = $('#dashboard');
+	var dashboard_table = dashboard.find('.maintbl');
+	var dashboard_elements;
+	
+	
+	var allow_timer_to_run = false;
+	
+	$('body').append(marker_popup_overlay);
+
+	
+	var map_options = {
+		addressControl: false,
+		clickToGo: true,
+		disableDefaultUI: false,
+		scrollwheel: true,
+		linksControl: true,
+		panControl: false,
+		zoomControl: false,
+		enableCloseButton: false,
+		streetViewControl: true,
+		pov: {
+			heading: 354, // Initial background pano heading
+			pitch: 42 // initial background pano pitch
+		},
+		zoom: this_level.zoom, // default zoom
+		mode: supportsCanvas() ? supportsWebGL() ? "webgl" : "html5" : "html4"
+	};
+	
+	
+	var insetmap, inset_map_options;
+
+
+	// creating the street view map and putting it the map-canvas div in the html page
+    
+	var map = new google.maps.StreetViewPanorama(document.getElementById('gmap'), map_options)
+
+	map.setPano(this_level.startmap); // from link on html page
+	
+
+	//var this_longitude = map.position.D;
+	//var this_latitude = map.position.k;
+	
+	var this_longitude, this_latitude, this_map;
+	
+	var marker_visible = false;
+	var marker_clickable = true;
+	var marker_icon = {};
+
+	
+	map.setVisible(true);
+	map.setPov({
+		heading: 207,
+		pitch: -10
+	});
+
+
+	
+	function google_maps_loaded(){
+
+		
+		if( typeof map.getPosition() != 'undefined' ){
+
+			this_map = map.getPano();
+			
+			inset_map_options = {
+		        zoom: this_level.inset.zoom,
+		        mapTypeId: google.maps.MapTypeId.SATELLITE,
+		        center: map.getPosition(),
+		        disableDefaultUI: true
+		    }
+
+			insetmap = new google.maps.Map(document.getElementById('inset'), inset_map_options);
+			insetmap.setCenter( map.getPosition() );
+
+		
+		}else{
+			
+			inset_map_options = {
+		        zoom: this_level.inset.zoom,
+		        mapTypeId: google.maps.MapTypeId.SATELLITE,
+		        //center: map.getPosition(),
+		        disableDefaultUI: true
+		    }
+			
+			insetmap = new google.maps.Map(document.getElementById('inset'), inset_map_options);
+		}
+		
+		
+		var artifact_counter = -1;
+
+		
+		
+		var start_tid = setTimeout(function(){
+			
+			clearTimeout(start_tid);
+			
+			marker_popup_overlay.removeClass('dspn');
+											
+			
+			marker_popup.html( this_level.content )
+			marker_proceed.html( 'Start the level' );
+			
+			marker_proceed.on('click.f7', function(){
+			
+				marker_proceed.unbind('click.f7');
+				allow_timer_to_run = true;
+				
+				marker_popup_overlay.addClass('dspn');
+				
+				console.log('here');
+			
+			})
+			
+		}, 500)
+		
+		
+		
+		
+					
+
+
+		
+		for(var i = 0; i < ts_artifacts.length; i++){
+		
+			if( ts_artifacts[i].level == level ){
+				
+				artifact_counter++;
+				
+				ts_artifacts[i].collected = false;
+				
+				ts_artifacts[i].latlng = new google.maps.LatLng( ts_artifacts[i].lat, ts_artifacts[i].lng);
+				
+				ts_artifacts[i].marker = new google.maps.Marker({
+					position: ts_artifacts[i].latlng,
+					map: map,
+					icon: {
+						url:ts_artifacts[i].image,
+						size: new google.maps.Size(100, 100),
+						origin: new google.maps.Point(0,0),
+						anchor: new google.maps.Point(100, 200)
+					},
+					visible: true,
+					clickable:true,
+					title: ts_artifacts[i].name,
+					art_obj: ts_artifacts[i],
+					art_order: i,
+					art_el_older: artifact_counter
+				});
+				
+				
+				
+				if( $.inArray( this_map, ts_artifacts[i].map ) < 0){
+					
+					marker_visible = false
+					marker_clickable = false;
+					
+					if( $.inArray( this_map, ts_artifacts[i].secondary_maps ) < 0){
+						
+					}else{
+						
+						marker_visible = true
+						marker_clickable = false;
+						
+						var this_secmap_index = $.inArray( this_map, ts_artifacts[i].secondary_maps );
+						var this_marker_size = ts_artifacts[i].secondary_sizes[this_secmap_index];
+						var this_marker_alpha = ts_artifacts[i].secondary_alpha[this_secmap_index];
+						
+						ts_artifacts[i].marker.icon.scaledSize = new google.maps.Size(this_marker_size, this_marker_size),
+						ts_artifacts[i].marker.icon.anchor = new google.maps.Point(this_marker_size, this_marker_size*2)
+						
+					}
+					
+					
+				}else{
+					marker_visible = true;
+					marker_clickable = true;
+				}
+				
+				ts_artifacts[i].marker.visible = marker_visible;
+				ts_artifacts[i].marker.clickable = marker_clickable;
+				ts_artifacts[i].marker.opacity = 0.2
+				
+				this_artifacts.push(ts_artifacts[i]);
+				
+				dashboard_table.append('<div class="col"><div class="artifact"><div class="artifact_info" data-index="'+i+'"><span class="fa fa-info-circle"></span></div><img src="'+ts_artifacts[i].image_off+'" width="60" height="60"></div></div>')
+				
+				
+				google.maps.event.addListener(ts_artifacts[i].marker, 'click', function() {
+
+					var this_artifact = this.art_obj
+					var this_marker = this;
+					
+					console.log( this_marker.art_order );
+										
+					dashboard_elements.eq( this_marker.art_el_older ).addClass('collected');
+					
+					marker_popup_overlay.removeClass('dspn');
+										
+					
+					marker_popup.html( this_artifact.content )
+					marker_proceed.html( this_artifact.collect )
+
+					
+					marker_proceed.unbind('click.f7');
+					
+					
+					marker_proceed.on('click.f7', function(){
+						
+						marker_popup_overlay.addClass('dspn');
+						this_marker.marker_visible = false;
+
+						ts_artifacts[ this_marker.art_order ].collected = true;
+						
+						ts_artifacts[ this_marker.art_order ].marker.visible = false;
+						ts_artifacts[ this_marker.art_order ].marker.clickable = false;
+						
+						var current_pov = map.getPov();
+						var new_pov = JSON.parse( JSON.stringify( current_pov ) );
+						
+						new_pov.heading = new_pov.heading - 1;
+						
+						map.setPov( new_pov );
+						map.setPov( current_pov );
+						
+
+						
+						dashboard_elements.eq( this_marker.art_el_older ).find('img').attr('src', this_artifact.image);
+
+
+						
+						if( dashboard_elements.length == dashboard_elements.filter('.collected').length ){
+							
+							console.log( 'current level: ' + level )
+													
+							level = Number(level);
+							level++;
+							
+							console.log( 'next level: ' + level )
+							
+							$.cookie('ts_level', level, { path: '/' });
+							
+							
+							clearInterval( timer_id );
+							
+							var end_timeout = setTimeout(function(){
+								
+								marker_popup_overlay.removeClass('dspn');
+								
+								marker_popup.html( this_level.success )
+								marker_proceed.html( this_level.success_button )
+								
+								marker_proceed.unbind('click.f7');
+								
+								
+								
+								marker_proceed.on('click.f7', function(){
+									
+									window.location.href = this_level.success_link;
+
+								})
+								
+								if( this_level == (ts_levels.length - 1) ){ // end of game
+									
+									$.cookie('ts_level', 0, { path: '/' });
+									
+								}
+								
+								
+							},2000)
+
+
+
+							
+							return;
+							
+						}
+
+						
+					})
+					
+					
+					
+				});
+				
+				
+				
+			}
+			
+		}
+		
+		
+		dashboard_elements = dashboard_table.find('.artifact');
+		var dashboard_artifacts_info = dashboard_table.find('.artifact_info');
+		
+		
+		console.log( dashboard_table );
+		
+		dashboard_artifacts_info.bind({
+			
+			'click':function(e){
+				
+				var this_data_index = $(this).attr('data-index');
+				//console.log( this_data_index );
+				
+				allow_timer_to_run = false;
+				
+				marker_popup_overlay.removeClass('dspn');
+				
+				marker_popup.html( ts_artifacts[this_data_index].content )
+				marker_proceed.html( ts_artifacts[this_data_index].content_button );
+				
+				marker_proceed.on('click.f7', function(){
+				
+					marker_proceed.unbind('click.f7');
+					allow_timer_to_run = true;
+					
+					marker_popup_overlay.addClass('dspn');
+
+				
+				})
+					
+			}
+			
+		})
+		
+		//console.log( this_artifacts );
+		
+
+	}
+	
+	
+		
+	google.maps.event.addListener(map, 'pano_changed', function() {
+		
+		//console.log('pano changed');
+		
+		this_map = map.getPano();
+		
+		for(var i = 0; i < ts_artifacts.length; i++){
+		
+			if( ts_artifacts[i].level == level ){
+				
+				if( $.inArray( this_map, ts_artifacts[i].map ) < 0){
+					marker_visible = false
+					marker_clickable = false;
+					
+					if( $.inArray( this_map, ts_artifacts[i].secondary_maps ) < 0){
+						
+					}else{
+						
+						marker_visible = true
+						marker_clickable = false;
+						
+						var this_secmap_index = $.inArray( this_map, ts_artifacts[i].secondary_maps )
+						var this_marker_size = ts_artifacts[i].secondary_sizes[this_secmap_index];
+						var this_marker_alpha = ts_artifacts[i].secondary_alpha[this_secmap_index];
+						
+						//console.log( this_marker_alpha );
+						
+						ts_artifacts[i].marker.icon.scaledSize = new google.maps.Size(this_marker_size, this_marker_size),
+						ts_artifacts[i].marker.icon.anchor = new google.maps.Point(this_marker_size, this_marker_size*2)
+						ts_artifacts[i].marker.opacity = this_marker_alpha;
+					}
+					
+					
+				}else{
+					marker_visible = true;
+					marker_clickable = true;
+					
+					ts_artifacts[i].marker.icon.scaledSize = new google.maps.Size(100, 100),
+					ts_artifacts[i].marker.icon.anchor = new google.maps.Point(100, 200)
+					ts_artifacts[i].marker.opacity = 1.0
+				}
+				
+				if( ts_artifacts[i].collected == true ){
+					
+					ts_artifacts[i].marker.visible = false;
+					ts_artifacts[i].marker.clickable = false;
+					
+				}else{
+
+					ts_artifacts[i].marker.visible = marker_visible;
+					ts_artifacts[i].marker.clickable = marker_clickable;
+				}
+				
+				
+			}
+			
+		}
+
+		
+	});
+	
+	google.maps.event.addListener(map, 'position_changed', function() {
+		
+		//this_longitude = map.position.D;
+		//this_latitude = map.position.k;
+		this_map = map.getPano();
+		
+		//console.log(map );
+		
+		console.log( this_map );
+		
+		console.log( map.getPosition() );
+		
+		if( typeof insetmap != 'undefined' ){
+			insetmap.setCenter( map.getPosition() );
+		}
+		
+		
+	});
+
+
+	google.maps.event.addDomListener(window, 'load', google_maps_loaded);
+	
+	
+	
+	
+	
+	
+	// tests to see if the browser supports WebGL and switch to HTML5, webgl rendering
+    function supportsCanvas() {
+    	var e = document.createElement("canvas");
+    	return !(!e.getContext || !e.getContext("2d"))
+    }
+    
+    function supportsWebGL() {
+    	if (!window.WebGLRenderingContext) return !1;
+    	var e = document.createElement("canvas"),
+    		t = ["webgl", "experimental-webgl", "moz-webgl", "webkit-3d"];
+    	for (var n in t)
+    		if (gl = e.getContext(t[n])) return !0;
+    	return !1
+    }
+    	
+    
+	function time_format(timestamp){
+		
+		var minutes = parseInt( timestamp / 60 ) % 60;
+		var seconds = timestamp % 60;
+		
+		return (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds  < 10 ? "0" + seconds : seconds);
+	}
+	
+	
+		
+	var timer_id = setInterval(function(){
+
+		if( !allow_timer_to_run ){
+			timer_el.html( time_format(this_level_time) );
+			return;
+		}
+
+		this_level_time--;
+		
+		timer_el.html( time_format(this_level_time) );
+	
+		
+		if( this_level_time == 0 ){
+			
+			clearInterval( timer_id );
+			endGame_Fail();
+			
+		}
+		
+	}, 1000)
+	
+	
+	
+	function endGame_Fail(){
+		
+		marker_popup_overlay.removeClass('dspn');
+		marker_popup.html( this_level.fail )
+		marker_proceed.html( this_level.fail_button )
+		
+		marker_proceed.on('click', function(){
+						
+			document.location.reload(true);
+			
+		})
+		
+	}
+	
+	
+	
+	
+}) // end jQuery wrap
+
+})(jQuery)
+
+</script>
+</body>
+</html>
